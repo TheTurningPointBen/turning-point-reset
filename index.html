@@ -2,138 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Turning Point — Reset Password</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: #f4f4f4;
-      margin: 0;
-    }
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      width: 350px;
-      text-align: center;
-    }
-    input[type="password"] {
-      width: calc(100% - 40px);
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-    .password-field {
-      position: relative;
-    }
-    .toggle-eye {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: pointer;
-    }
-    button {
-      padding: 10px 20px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    img.logo {
-      width: 150px;
-      margin-bottom: 20px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Password | Turning Point</title>
+
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 
-  <div class="container">
-    <img class="logo" src="logo.png" alt="Turning Point Logo">
+  <form id="reset-form">
+    <img src="./logo.png" alt="Turning Point Logo" class="logo">
 
     <h2>Reset Your Password</h2>
 
-    <div class="password-field">
-      <input type="password" id="password" placeholder="New Password">
-      <span class="toggle-eye" onclick="togglePassword('password')">&#128065;</span>
+    <div class="input-group">
+      <input id="password" type="password" placeholder="New password" required>
+      <span class="toggle" data-target="password">👁</span>
     </div>
 
-    <div class="password-field">
-      <input type="password" id="confirmPassword" placeholder="Confirm Password">
-      <span class="toggle-eye" onclick="togglePassword('confirmPassword')">&#128065;</span>
+    <div class="input-group">
+      <input id="confirm-password" type="password" placeholder="Confirm password" required>
+      <span class="toggle" data-target="confirm-password">👁</span>
     </div>
 
-    <button type="button" id="resetBtn" onclick="resetPassword()">Reset Password</button>
-  </div>
+    <button type="submit" class="primary-btn">
+      Reset Password
+    </button>
 
-  <script>
-    // Initialize Supabase
-    const supabaseUrl = "https://yljmowhxowqulqqwzhuc.supabase.co";
-    const supabaseKey = "sb_publishable_qO_rJa19R_kgxdzWwTuyJg_4JIsdpSh";
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    <p id="message"></p>
+  </form>
 
-    function togglePassword(fieldId) {
-      const input = document.getElementById(fieldId);
-      input.type = input.type === "password" ? "text" : "password";
-    }
-
-    async function resetPassword() {
-      const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
-
-      if (!password || !confirmPassword) {
-        alert("Please fill in both fields.");
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        alert("Passwords do not match!");
-        return;
-      }
-
-      const hash = window.location.hash;
-      const params = new URLSearchParams(hash.slice(1));
-      const access_token = params.get('access_token');
-      const refresh_token = params.get('refresh_token');
-
-      if (!access_token) {
-        alert("Invalid or expired link.");
-        return;
-      }
-
-      // Restore Supabase session
-      const { data, error: sessionError } = await supabase.auth.setSession({
-        access_token,
-        refresh_token
-      });
-
-      if (sessionError) {
-        alert("Session restore failed: " + sessionError.message);
-        return;
-      }
-
-      // Update password
-      const { error: updateError } = await supabase.auth.updateUser({ password });
-
-      if (updateError) {
-        alert("Password reset failed: " + updateError.message);
-      } else {
-        alert("Password reset successful!");
-        window.location.href = "https://the-turning-point-booking-app.onrender.com/";
-      }
-    }
-  </script>
-
+  <script type="module" src="./reset.js"></script>
 </body>
 </html>
+</html>
+
