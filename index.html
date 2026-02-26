@@ -95,7 +95,8 @@
     <div id="message" class="message"></div>
   </div>
 
-  <script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
   const SUPABASE_URL = "https://yljmowhxowqulqxqzhuc.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_qO_rJa19R_kgxdzWwTuyJg_4JIsdpSh";
 
@@ -104,25 +105,36 @@
     SUPABASE_ANON_KEY
   );
 
-  // ✅ STEP 1: Restore session from URL
+  const resetBtn = document.getElementById("resetBtn");
+  const message = document.getElementById("message");
+
+  resetBtn.disabled = true;
+
   async function restoreSessionFromUrl() {
-    const hash = window.location.hash.substring(1);
+    const hash = window.location.hash.replace("#", "");
     const params = new URLSearchParams(hash);
 
     const access_token = params.get("access_token");
     const refresh_token = params.get("refresh_token");
 
     if (!access_token || !refresh_token) {
-      document.getElementById("message").textContent =
-        "Invalid or expired recovery link.";
-      document.getElementById("message").classList.add("error");
+      message.textContent = "Invalid or expired reset link.";
+      message.className = "message error";
       return;
     }
 
-    await supabaseClient.auth.setSession({
+    const { error } = await supabaseClient.auth.setSession({
       access_token,
       refresh_token
     });
+
+    if (error) {
+      message.textContent = error.message;
+      message.className = "message error";
+      return;
+    }
+
+    resetBtn.disabled = false;
   }
 
   restoreSessionFromUrl();
@@ -135,13 +147,12 @@
   async function resetPassword() {
     const password = document.getElementById("password").value;
     const confirm = document.getElementById("confirmPassword").value;
-    const message = document.getElementById("message");
 
     message.textContent = "";
     message.className = "message";
 
     if (!password || !confirm) {
-      message.textContent = "Please fill in both fields.";
+      message.textContent = "Please complete both fields.";
       message.classList.add("error");
       return;
     }
