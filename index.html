@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Turning Point — Reset Password</title>
+  <meta charset="UTF-8" />
+  <title>Reset Password | Turning Point</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -10,25 +11,29 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      height: 100vh;
+      background: #f5f7fa;
       display: flex;
-      align-items: center;
       justify-content: center;
-      margin: 0;
+      align-items: center;
+      height: 100vh;
     }
 
-    .container {
-      background: white;
+    .card {
+      background: #fff;
       padding: 30px;
+      width: 100%;
+      max-width: 400px;
       border-radius: 8px;
-      width: 360px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       text-align: center;
     }
 
     img {
-      width: 150px;
+      max-width: 180px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
       margin-bottom: 20px;
     }
 
@@ -40,9 +45,8 @@
     input {
       width: 100%;
       padding: 10px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      padding-right: 40px;
+      font-size: 16px;
     }
 
     .eye {
@@ -55,99 +59,111 @@
 
     button {
       width: 100%;
-      padding: 10px;
-      font-size: 15px;
-      background: #0066cc;
+      padding: 12px;
+      background: #003366;
       color: white;
       border: none;
-      border-radius: 4px;
+      font-size: 16px;
       cursor: pointer;
+      border-radius: 4px;
     }
 
-    button:hover {
-      background: #004999;
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <img src="logo.png" alt="Turning Point Logo">
+  <div class="card">
+    <!-- Replace src with your logo path -->
+    <img src="logo.png" alt="Turning Point Logo" />
 
     <h2>Reset Your Password</h2>
 
     <div class="field">
-      <input type="password" id="password" placeholder="New password">
+      <input type="password" id="password" placeholder="New password" />
       <span class="eye" onclick="toggle('password')">👁</span>
     </div>
 
     <div class="field">
-      <input type="password" id="confirmPassword" placeholder="Confirm password">
-      <span class="eye" onclick="toggle('confirmPassword')">👁</span>
+      <input type="password" id="passwordConfirm" placeholder="Confirm password" />
+      <span class="eye" onclick="toggle('passwordConfirm')">👁</span>
     </div>
 
-    <button onclick="resetPassword()">Reset Password</button>
+    <button type="button" id="resetBtn" onclick="resetPassword()" disabled>
+      Reset Password
+    </button>
   </div>
 
   <script>
-    // 🔑 PUT YOUR REAL VALUES HERE
+    // 🔐 Supabase config (REPLACE THESE)
     const SUPABASE_URL = "https://yljmowhxowqulqqwzhuc.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_qO_rJa19R_kgxdzWwTuyJg_4JIsdpSh";
 
-    // ✅ IMPORTANT: do NOT call this variable "supabase"
     const supabaseClient = supabase.createClient(
       SUPABASE_URL,
       SUPABASE_ANON_KEY
     );
 
+    let recoveryReady = false;
+
+    // Handle recovery session on page load
+    document.addEventListener("DOMContentLoaded", async () => {
+      const { data, error } = await supabaseClient.auth.getSessionFromUrl({
+        storeSession: true
+      });
+
+      if (error || !data.session) {
+        alert("Reset link invalid or expired. Please request a new reset email.");
+        return;
+      }
+
+      recoveryReady = true;
+      document.getElementById("resetBtn").disabled = false;
+    });
+
+    // Toggle password visibility
     function toggle(id) {
       const input = document.getElementById(id);
       input.type = input.type === "password" ? "text" : "password";
     }
 
+    // Reset password
     async function resetPassword() {
-      const password = document.getElementById("password").value;
-      const confirm = document.getElementById("confirmPassword").value;
-
-      if (!password || !confirm) {
-        alert("Please fill in both fields");
+      if (!recoveryReady) {
+        alert("Please wait a moment and try again.");
         return;
       }
 
-      if (password !== confirm) {
-        alert("Passwords do not match");
+      const pw1 = document.getElementById("password").value;
+      const pw2 = document.getElementById("passwordConfirm").value;
+
+      if (!pw1 || !pw2) {
+        alert("Please enter your password twice.");
         return;
       }
 
-      // Let Supabase read the recovery token itself
-const { data, error: sessionError } =
-  await supabaseClient.auth.getSessionFromUrl({
-    storeSession: false
-  });
-
-if (sessionError || !data.session) {
-  alert("Reset link is invalid or expired");
-  return;
-}
-
-      if (sessionError) {
-        alert("Session error: " + sessionError.message);
+      if (pw1 !== pw2) {
+        alert("Passwords do not match.");
         return;
       }
 
-      // Update password
-      const { error } =
-        await supabaseClient.auth.updateUser({ password });
+      const { error } = await supabaseClient.auth.updateUser({
+        password: pw1
+      });
 
       if (error) {
-        alert("Reset failed: " + error.message);
-      } else {
-        alert("Password reset successful");
-        window.location.href =
-          "https://the-turning-point-booking-app.onrender.com/";
+        alert(error.message);
+        return;
       }
+
+      alert("Password reset successful!");
+
+      // Redirect to your app
+      window.location.href = "https://the-turning-point-booking-app.onrender.com";
     }
   </script>
 </body>
 </html>
-
