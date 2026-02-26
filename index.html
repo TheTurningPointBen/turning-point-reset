@@ -35,93 +35,69 @@
     <p id="message">Checking reset link...</p>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
-  <script>
-    const SUPABASE_URL = 'https://yljmowhxowqulqqwzhuc.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_qO_rJa19R_kgxdzWwTuyJg_4JIsdpSh';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <input type="password" id="password1" placeholder="Enter new password" />
+<input type="password" id="password2" placeholder="Confirm new password" />
+<button id="resetBtn" disabled>Reset Password</button>
+<p id="message"></p>
 
-    window.onload = async () => {
-      const password1 = document.getElementById('password1');
-      const password2 = document.getElementById('password2');
-      const resetBtn = document.getElementById('resetBtn');
-      const message = document.getElementById('message');
+<script>
+const SUPABASE_URL = 'https://yljmowhxowqulqqwzhuc.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_qO_rJa19R_kgxdzWwTuyJg_4JIsdpSh';
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      const access_token = params.get('access_token');
+window.onload = () => {
+  const password1 = document.getElementById('password1');
+  const password2 = document.getElementById('password2');
+  const resetBtn = document.getElementById('resetBtn');
+  const message = document.getElementById('message');
 
-      if(!access_token) {
-        message.textContent = 'Reset link missing or invalid.';
-        return;
-      }
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const access_token = params.get('access_token');
 
-      // Validate token by trying to get user
-      try {
-        const { data: user, error } = await supabase.auth.getUser(access_token);
-        if(error || !user) {
-          message.textContent = 'Reset link invalid or expired.';
-          return;
-        }
+  if(!access_token) {
+    message.textContent = 'Reset link missing or invalid.';
+    password1.disabled = true;
+    password2.disabled = true;
+    return;
+  }
+
+  // Enable fields immediately — no need to check token
+  password1.disabled = false;
+  password2.disabled = false;
+
+  function checkPasswords() {
+    if(password1.value && password2.value && password1.value === password2.value){
+      resetBtn.disabled = false;
+      message.textContent = '';
+    } else {
+      resetBtn.disabled = true;
+      if(password1.value && password2.value && password1.value !== password2.value){
+        message.textContent = 'Passwords do not match';
+      } else {
         message.textContent = '';
-        password1.disabled = false;
-        password2.disabled = false;
-
-      } catch(e) {
-        message.textContent = 'Unexpected error validating link.';
-        return;
       }
-
-      // Check passwords match
-      function checkPasswords() {
-        if(password1.value && password2.value && password1.value === password2.value) {
-          resetBtn.disabled = false;
-          message.textContent = '';
-        } else {
-          resetBtn.disabled = true;
-          if(password1.value && password2.value && password1.value !== password2.value) {
-            message.textContent = 'Passwords do not match';
-          } else {
-            message.textContent = '';
-          }
-        }
-      }
-
-      password1.addEventListener('input', checkPasswords);
-      password2.addEventListener('input', checkPasswords);
-
-      window.togglePassword = function(id) {
-        const input = document.getElementById(id);
-        input.type = input.type === 'password' ? 'text' : 'password';
-      }
-
-      // Reset password
-      async function resetPassword() {
-        resetBtn.disabled = true;
-        message.textContent = 'Resetting password...';
-        try {
-          const { data, error } = await supabase.auth.updateUser(
-            { password: password1.value },
-            { access_token: access_token }
-          );
-          if(error) {
-            message.textContent = error.message;
-            resetBtn.disabled = false;
-          } else {
-            message.style.color = 'green';
-            message.textContent = 'Password reset successfully! Redirecting...';
-            setTimeout(() => {
-              window.location.href = 'https://the-turning-point-booking-app.onrender.com';
-            }, 2000);
-          }
-        } catch(e) {
-          message.textContent = 'Unexpected error occurred';
-          resetBtn.disabled = false;
-        }
-      }
-
-      resetBtn.addEventListener('click', resetPassword);
     }
-  </script>
-</body>
-</html>
+  }
+
+  password1.addEventListener('input', checkPasswords);
+  password2.addEventListener('input', checkPasswords);
+
+  resetBtn.addEventListener('click', async () => {
+    resetBtn.disabled = true;
+    message.textContent = 'Resetting password...';
+    const { data, error } = await supabase.auth.updateUser(
+      { password: password1.value },
+      { access_token }
+    );
+    if(error){
+      message.textContent = error.message;
+      resetBtn.disabled = false;
+    } else {
+      message.style.color = 'green';
+      message.textContent = 'Password reset successfully! Redirecting...';
+      setTimeout(()=>{window.location.href='https://the-turning-point-booking-app.onrender.com'},2000);
+    }
+  });
+}
+</script>
