@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Reset Password</title>
 
-  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -22,11 +21,12 @@
       border-radius: 8px;
       width: 320px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
     }
     input, button {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
+      margin-top: 12px;
       font-size: 14px;
     }
     button {
@@ -38,37 +38,50 @@
     .message {
       margin-top: 15px;
       font-size: 14px;
+      min-height: 18px;
     }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <h3>Reset your password</h3>
+  <img src="logo.png" alt="Turning Point Logo" width="180">
+  <h3>Reset Your Password</h3>
 
-  <input type="password" id="password" placeholder="New password" />
-  <button onclick="resetPassword()">Reset password</button>
+  <input type="password" id="password" placeholder="New password">
+  <button id="resetBtn">Reset Password</button>
 
   <div id="message" class="message"></div>
 </div>
 
 <script>
-  // 🔑 SUPABASE CONFIG
-  const supabaseUrl = "https://yljmowhxowqulqqwzhuc.supabase.co";
-  const supabaseKey = "sb_publishable_qO_rJa19R_kgxdzWwTuyJg_4JIsdpSh";
+  // ✅ SUPABASE CONFIG
+  const SUPABASE_URL = "https://yljmowhxowqulqqwzhuc.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_qO_rJa19R_kgxdzWwTuyJg_4JIsdpSh";
 
-  const supabase = supabaseJs.createClient(supabaseUrl, supabaseKey);
+  const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
 
-  // 📌 Extract tokens from URL hash
+  // 🔎 Read hash params
   const hash = window.location.hash.substring(1);
   const params = new URLSearchParams(hash);
 
   const accessToken = params.get("access_token");
   const refreshToken = params.get("refresh_token");
 
-  async function resetPassword() {
+  const message = document.getElementById("message");
+  const button = document.getElementById("resetBtn");
+
+  if (!accessToken || !refreshToken) {
+    message.innerText = "Invalid or expired reset link.";
+    message.style.color = "red";
+    button.disabled = true;
+  }
+
+  button.addEventListener("click", async () => {
     const password = document.getElementById("password").value;
-    const message = document.getElementById("message");
 
     if (!password) {
       message.innerText = "Please enter a new password.";
@@ -76,14 +89,11 @@
       return;
     }
 
-    if (!accessToken || !refreshToken) {
-      message.innerText = "Invalid or expired reset link.";
-      message.style.color = "red";
-      return;
-    }
+    message.innerText = "Updating password...";
+    message.style.color = "black";
 
     // 🔐 Set session manually
-    const { error: sessionError } = await supabase.auth.setSession({
+    const { error: sessionError } = await supabaseClient.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken
     });
@@ -95,7 +105,9 @@
     }
 
     // 🔁 Update password
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await supabaseClient.auth.updateUser({
+      password: password
+    });
 
     if (error) {
       message.innerText = error.message;
@@ -103,8 +115,9 @@
     } else {
       message.innerText = "Password updated successfully. You may now log in.";
       message.style.color = "green";
+      button.disabled = true;
     }
-  }
+  });
 </script>
 
 </body>
