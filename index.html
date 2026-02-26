@@ -41,7 +41,6 @@
       width: 100%;
       padding: 10px;
       font-size: 16px;
-      box-sizing: border-box;
     }
 
     .eye {
@@ -50,8 +49,7 @@
       top: 50%;
       transform: translateY(-50%);
       cursor: pointer;
-      font-size: 14px;
-      color: #666;
+      user-select: none;
     }
 
     button {
@@ -65,22 +63,13 @@
       border-radius: 4px;
     }
 
-    button:hover {
-      background: #07406b;
-    }
-
     .message {
       margin-top: 15px;
       font-size: 14px;
     }
 
-    .error {
-      color: red;
-    }
-
-    .success {
-      color: green;
-    }
+    .error { color: red; }
+    .success { color: green; }
   </style>
 </head>
 
@@ -107,13 +96,15 @@
   </div>
 
   <script>
-    // 🔐 Supabase credentials
     const SUPABASE_URL = "https://yljmowhxowqulqxqzhuc.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_qO_rJa19R_kgxdzWwTuyJg_4JIsdpSh";
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ✅ CORRECT: do NOT overwrite supabase
+    const supabaseClient = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
 
-    // 👁 Toggle password visibility
     function togglePassword(id) {
       const field = document.getElementById(id);
       field.type = field.type === "password" ? "text" : "password";
@@ -121,25 +112,25 @@
 
     async function resetPassword() {
       const password = document.getElementById("password").value;
-      const confirmPassword = document.getElementById("confirmPassword").value;
+      const confirm = document.getElementById("confirmPassword").value;
       const message = document.getElementById("message");
 
       message.textContent = "";
       message.className = "message";
 
-      if (!password || !confirmPassword) {
+      if (!password || !confirm) {
         message.textContent = "Please fill in both fields.";
         message.classList.add("error");
         return;
       }
 
-      if (password !== confirmPassword) {
+      if (password !== confirm) {
         message.textContent = "Passwords do not match.";
         message.classList.add("error");
         return;
       }
 
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await supabaseClient.auth.updateUser({
         password: password
       });
 
