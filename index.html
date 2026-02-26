@@ -12,6 +12,7 @@
     button:disabled { background: #ccc; cursor: not-allowed; }
     .eye-btn { position: relative; float: right; margin-top: -35px; margin-right: 10px; cursor: pointer; }
     h1 { margin-bottom: 20px; }
+    #message { color: red; margin-top: 10px; min-height: 20px; }
   </style>
 </head>
 <body>
@@ -31,7 +32,7 @@
     </div>
 
     <button id="resetBtn" disabled>Reset Password</button>
-    <p id="message" style="color:red;margin-top:10px;"></p>
+    <p id="message"></p>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
@@ -46,8 +47,21 @@
     const resetBtn = document.getElementById('resetBtn');
     const message = document.getElementById('message');
 
-    // Enable reset button if both passwords match and are not empty
+    // Extract access_token from URL fragment
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.substring(1));
+    const access_token = params.get('access_token');
+
+    if(!access_token) {
+      message.textContent = 'Invalid or missing reset token';
+    }
+
+    // Enable reset button only if passwords match AND token exists
     function checkPasswords() {
+      if (!access_token) {
+        resetBtn.disabled = true;
+        return;
+      }
       if(password1.value && password2.value && password1.value === password2.value) {
         resetBtn.disabled = false;
         message.textContent = '';
@@ -70,24 +84,25 @@
       input.type = input.type === 'password' ? 'text' : 'password';
     }
 
-    // Extract access_token from URL fragment
-    const hash = window.location.hash;
-    const params = new URLSearchParams(hash.substring(1));
-    const access_token = params.get('access_token');
-
-    if(!access_token) {
-      message.textContent = 'Invalid or missing reset token';
-    }
-
     // Reset password function
     async function resetPassword() {
+      if(!access_token) {
+        message.textContent = 'Reset token missing';
+        return;
+      }
+
+      resetBtn.disabled = true;
+      message.textContent = 'Resetting password...';
+
       try {
-        const { error } = await supabase.auth.updateUser({ 
-          password: password1.value,
-        }, access_token);
+        const { data, error } = await supabase.auth.updateUser(
+          { password: password1.value },
+          { access_token: access_token }
+        );
 
         if(error) {
           message.textContent = error.message;
+          resetBtn.disabled = false;
         } else {
           message.style.color = 'green';
           message.textContent = 'Password reset successfully! Redirecting...';
@@ -97,6 +112,7 @@
         }
       } catch(e) {
         message.textContent = 'Unexpected error occurred';
+        resetBtn.disabled = false;
       }
     }
 
