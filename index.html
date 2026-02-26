@@ -119,21 +119,16 @@
         return;
       }
 
-      const params = new URLSearchParams(window.location.hash.substring(1));
-      const access_token = params.get("access_token");
-      const refresh_token = params.get("refresh_token");
+      // Let Supabase read the recovery token itself
+const { data, error: sessionError } =
+  await supabaseClient.auth.getSessionFromUrl({
+    storeSession: false
+  });
 
-      if (!access_token || !refresh_token) {
-        alert("Reset link is invalid or expired");
-        return;
-      }
-
-      // Restore session
-      const { error: sessionError } =
-        await supabaseClient.auth.setSession({
-          access_token,
-          refresh_token
-        });
+if (sessionError || !data.session) {
+  alert("Reset link is invalid or expired");
+  return;
+}
 
       if (sessionError) {
         alert("Session error: " + sessionError.message);
@@ -155,3 +150,4 @@
   </script>
 </body>
 </html>
+
