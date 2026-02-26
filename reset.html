@@ -1,20 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Password Reset</title>
-  <script>
-    const fragment = window.location.hash.substring(1);
-
-    if (fragment.includes("access_token")) {
-      window.location.href =
-        "https://the-turning-point-booking-app.onrender.com/password-reset?" + fragment;
-    } else {
-      document.body.innerHTML = "Invalid or expired reset link.";
-    }
-  </script>
+  <meta charset="UTF-8">
+  <title>Turning Point — Reset Password</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: 50px auto; text-align: center; }
+    input { display: block; width: 100%; margin: 10px 0; padding: 10px; font-size: 16px; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    img { max-width: 200px; margin-bottom: 20px; }
+  </style>
 </head>
 <body>
-Redirecting…
+
+  <!-- Banner / Logo -->
+  <img src="YOUR_LOGO_URL_HERE" alt="Turning Point Logo" />
+  <h2>Reset your password</h2>
+
+  <!-- Password Form -->
+  <input type="password" id="new-password" placeholder="New password" />
+  <button id="reset-btn">Reset Password</button>
+
+  <p id="status"></p>
+
+  <script>
+    // Supabase setup
+    const SUPABASE_URL = "https://yljmowhxowqulqqwzhuc.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_qO_rJa19R_kgxdzWwTuyJg_4JIsdpSh"; // replace with your anon key
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Read token from URL hash
+    const params = new URLSearchParams(window.location.hash.replace('#',''));
+    const access_token = params.get('access_token');
+
+    document.getElementById('reset-btn').addEventListener('click', async () => {
+      const newPassword = document.getElementById('new-password').value;
+      const { data, error } = await supabase.auth.updateUser({
+        access_token: access_token,
+        password: newPassword
+      });
+
+      const status = document.getElementById('status');
+      if (error) {
+        status.innerText = "Error: " + error.message;
+        status.style.color = 'red';
+      } else {
+        status.innerText = "Password reset successful! You can now log in.";
+        status.style.color = 'green';
+      }
+    });
+  </script>
+
 </body>
 </html>
